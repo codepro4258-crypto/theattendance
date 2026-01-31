@@ -499,6 +499,28 @@
                     await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
                     await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
                 }
+                async function startCamera(videoEl, statusEl) {
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        if (statusEl) statusEl.textContent = "Camera not supported";
+                        showToast("Camera access not supported in this browser.");
+                        return null;
+                    }
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: "user" },
+                            audio: false
+                        });
+                        videoEl.srcObject = stream;
+                        await videoEl.play();
+                        if (statusEl) statusEl.textContent = "Camera Active";
+                        return stream;
+                    } catch (err) {
+                        console.error("Camera Error:", err);
+                        if (statusEl) statusEl.textContent = "Camera blocked";
+                        showToast("Camera permission denied or unavailable.");
+                        return null;
+                    }
+                }
             `;
 
             // =======================================================
@@ -512,7 +534,7 @@
                         <div class="app-grid">
                             <div class="cam-panel">
                                 <div class="vid-wrap">
-                                    <video id="video" autoplay muted></video>
+                                    <video id="video" autoplay muted playsinline></video>
                                     <canvas id="canvas"></canvas>
                                 </div>
                                 <div class="controls">
@@ -548,9 +570,9 @@
                         (async function init() {
                             await loadFaceAPI();
                             document.getElementById('status').textContent = "Starting Camera...";
-                            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
                             const video = document.getElementById('video');
-                            video.srcObject = stream;
+                            const stream = await startCamera(video, document.getElementById('status'));
+                            if(!stream) return;
                             
                             // Load saved data
                             const saved = localStorage.getItem('v1_faces');
@@ -651,7 +673,7 @@
                         <div class="app-grid">
                             <div class="cam-panel">
                                 <div class="vid-wrap">
-                                    <video id="video" autoplay muted></video>
+                                    <video id="video" autoplay muted playsinline></video>
                                     <canvas id="canvas"></canvas>
                                 </div>
                                 <div class="controls">
@@ -683,8 +705,8 @@
                         (async function init() {
                             await loadFaceAPI();
                             const video = document.getElementById('video');
-                            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
-                            video.srcObject = stream;
+                            const stream = await startCamera(video);
+                            if(!stream) return;
 
                             const saved = localStorage.getItem('v2_faces');
                             if(saved) {
@@ -773,7 +795,7 @@
                         <div class="app-grid">
                             <div class="cam-panel">
                                 <div class="vid-wrap">
-                                    <video id="video" autoplay muted></video>
+                                    <video id="video" autoplay muted playsinline></video>
                                     <canvas id="canvas"></canvas>
                                 </div>
                                 <div class="controls">
@@ -814,8 +836,8 @@
                             
                             // Setup Camera
                             const video = document.getElementById('video');
-                            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
-                            video.srcObject = stream;
+                            const stream = await startCamera(video);
+                            if(!stream) return;
 
                             // Setup GPS
                             if(navigator.geolocation) {
