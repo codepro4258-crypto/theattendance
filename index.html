@@ -1,0 +1,949 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE ATTENDANCE TAKER | Complete Suite v2.0</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Face API Library -->
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    
+    <style>
+        /* =========================================
+           GLOBAL VARIABLES & RESET
+           ========================================= */
+        :root {
+            --primary: #00c6ff;
+            --primary-dark: #0072ff;
+            --bg-dark: #0f172a;
+            --panel-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-yellow: #f59e0b;
+            --border-color: #334155;
+            --gradient-main: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            --glass: rgba(30, 41, 59, 0.7);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        /* Animated Background Mesh */
+        .bg-animation {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;
+            background: 
+                radial-gradient(circle at 15% 50%, rgba(0, 198, 255, 0.08) 0%, transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 25%);
+            animation: pulseBg 10s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseBg {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        /* =========================================
+           LANDING PAGE UI
+           ========================================= */
+        .container {
+            position: relative; z-index: 10; max-width: 1400px; margin: 0 auto; padding: 2rem;
+        }
+
+        /* Header */
+        header { text-align: center; padding: 4rem 0 3rem; }
+
+        .logo-main {
+            font-size: 3.5rem; font-weight: 800;
+            background: var(--gradient-main);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: -1px; margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            filter: drop-shadow(0 0 15px rgba(0, 198, 255, 0.3));
+        }
+
+        .tagline {
+            font-size: 1.2rem; color: var(--text-muted); font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        /* Hero / Overview */
+        .hero-section {
+            background: var(--glass); backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color); border-radius: 24px;
+            padding: 3rem; margin-bottom: 4rem; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            animation: fadeUp 0.8s ease-out;
+        }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .hero-section h2 { font-size: 2rem; margin-bottom: 1rem; color: white; }
+        .hero-section p { max-width: 700px; margin: 0 auto 2rem; line-height: 1.6; color: var(--text-muted); }
+
+        .feature-icons { display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; }
+        .f-item { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+        .f-icon { font-size: 2rem; background: rgba(255,255,255,0.05); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid var(--border-color); color: var(--primary); }
+
+        /* Versions Grid */
+        .versions-title {
+            text-align: center; font-size: 2rem; margin-bottom: 2rem;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .versions-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem; margin-bottom: 4rem;
+        }
+
+        .version-card {
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            border-radius: 20px; padding: 2.5rem; position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+
+        .version-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 15px 40px rgba(0, 198, 255, 0.15);
+        }
+
+        .badge {
+            display: inline-block; padding: 0.4rem 1rem; border-radius: 50px;
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; margin-bottom: 1.5rem; align-self: flex-start;
+        }
+        .b-basic { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .b-room { background: rgba(245, 158, 11, 0.15); color: var(--accent-yellow); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .b-pro { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); border: 1px solid rgba(139, 92, 246, 0.3); }
+
+        .v-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: white; }
+        .v-desc { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem; flex: 1; }
+
+        .v-list { list-style: none; margin-bottom: 2rem; }
+        .v-list li { margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.8rem; font-size: 0.9rem; color: #cbd5e1; }
+        .v-list li::before { content: '✓'; color: var(--primary); font-weight: bold; }
+
+        .launch-btn {
+            width: 100%; padding: 1rem; border: none; border-radius: 12px;
+            font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;
+            cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
+            background: var(--bg-dark); color: white; border: 1px solid var(--border-color);
+        }
+
+        .launch-btn:hover {
+            background: var(--gradient-main); border-color: transparent;
+            box-shadow: 0 0 20px rgba(0, 198, 255, 0.4);
+        }
+
+        /* Footer */
+        footer { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem; border-top: 1px solid var(--border-color); margin-top: auto; }
+
+        /* =========================================
+           APP RUNNER OVERLAY
+           ========================================= */
+        #app-runner {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--bg-dark); z-index: 2000;
+            display: none; opacity: 0; transition: opacity 0.4s ease;
+            flex-direction: column;
+        }
+
+        #app-runner.active { display: flex; opacity: 1; }
+
+        .runner-header {
+            height: 70px; border-bottom: 1px solid var(--border-color);
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 2rem; flex-shrink: 0;
+        }
+
+        .runner-title { font-weight: 700; font-size: 1.2rem; color: var(--primary); letter-spacing: 1px; text-transform: uppercase; }
+
+        .back-btn {
+            background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border-color);
+            padding: 0.5rem 1.2rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+            display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.1); }
+
+        #app-content { flex: 1; overflow: hidden; position: relative; }
+
+        /* =========================================
+           CHATBOT
+           ========================================= */
+        .chatbot-container { position: fixed; bottom: 30px; right: 30px; z-index: 5000; }
+        .chat-toggle {
+            width: 60px; height: 60px; border-radius: 50%; background: var(--gradient-main);
+            border: none; color: white; font-size: 1.5rem; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 198, 255, 0.3); transition: transform 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .chat-toggle:hover { transform: scale(1.1); }
+
+        .chat-window {
+            position: absolute; bottom: 80px; right: 0; width: 340px; height: 450px;
+            background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 16px;
+            display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transform-origin: bottom right; transform: scale(0); opacity: 0; transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+            overflow: hidden;
+        }
+        .chat-window.open { transform: scale(1); opacity: 1; }
+
+        .chat-head { padding: 1rem; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .chat-head h4 { font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; }
+        .chat-body { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; }
+        .msg { padding: 0.6rem 1rem; border-radius: 12px; font-size: 0.85rem; max-width: 85%; line-height: 1.4; }
+        .msg-bot { background: rgba(255,255,255,0.05); align-self: flex-start; border-bottom-left-radius: 2px; }
+        .msg-user { background: var(--primary-dark); align-self: flex-end; border-bottom-right-radius: 2px; }
+        .chat-input-box { padding: 0.8rem; border-top: 1px solid var(--border-color); display: flex; gap: 0.5rem; }
+        .chat-input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem; color: white; outline: none; }
+        .chat-send { background: var(--primary); border: none; width: 35px; height: 35px; border-radius: 8px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo-main { font-size: 2.2rem; }
+            .hero-section { padding: 1.5rem; }
+            .versions-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-animation"></div>
+
+    <!-- MAIN LANDING PAGE -->
+    <div class="container">
+        <header>
+            <div class="logo-main">THE ATTENDANCE TAKER</div>
+            <div class="tagline">Next-Gen AI Facial Recognition Suite v2.0</div>
+        </header>
+
+        <section class="hero-section">
+            <h2>Experience the Future of Attendance</h2>
+            <p>Deploy enterprise-grade biometric attendance in seconds. No servers required. 
+               Powered by client-side Machine Learning and Real-time Geolocation.</p>
+            
+            <div class="feature-icons">
+                <div class="f-item"><div class="f-icon">🧠</div><span>AI Powered</span></div>
+                <div class="f-item"><div class="f-icon">🔒</div><span>100% Private</span></div>
+                <div class="f-item"><div class="f-icon">⚡</div><span>Real-Time</span></div>
+                <div class="f-item"><div class="f-icon">📍</div><span>Geo-Fencing</span></div>
+            </div>
+        </section>
+
+        <h2 class="versions-title">Select Your Version</h2>
+
+        <div class="versions-grid">
+            <!-- V1 -->
+            <div class="version-card">
+                <span class="badge b-basic">Basic</span>
+                <h3 class="v-title">Standard Suite</h3>
+                <p class="v-desc">Core facial recognition functionality. Ideal for small teams and events.</p>
+                <ul class="v-list">
+                    <li>Face Registration & Enrollment</li>
+                    <li>Instant Recognition</li>
+                    <li>Local Storage Database</li>
+                    <li>Exportable Logs</li>
+                </ul>
+                <button class="launch-btn" onclick="appManager.loadVersion('v1')">Launch App</button>
+            </div>
+
+            <!-- V2 -->
+            <div class="version-card">
+                <span class="badge b-room">Enhanced</span>
+                <h3 class="v-title">Room Tracker</h3>
+                <p class="v-desc">Adds context to attendance. Assign rooms/offices to individuals.</p>
+                <ul class="v-list">
+                    <li>All Basic Features</li>
+                    <li>Room Number Assignment</li>
+                    <li>Location-Specific Reports</li>
+                    <li>Smart Sorting</li>
+                </ul>
+                <button class="launch-btn" onclick="appManager.loadVersion('v2')">Launch App</button>
+            </div>
+
+            <!-- V3 -->
+            <div class="version-card">
+                <span class="badge b-pro">Pro + API</span>
+                <h3 class="v-title">Geo-Spatial System</h3>
+                <p class="v-desc">Validate physical presence with GPS and OpenStreetMap Address API.</p>
+                <ul class="v-list">
+                    <li>All Room Features</li>
+                    <li>GPS Geofencing</li>
+                    <li>Address Lookup API</li>
+                    <li>Remote vs On-Site Status</li>
+                </ul>
+                <button class="launch-btn" onclick="appManager.loadVersion('v3')">Launch App</button>
+            </div>
+        </div>
+        
+        <footer>
+            Built with ❤️ by  VIHAN BANSAL
+        </footer>
+    </div>
+
+    <!-- APP RUNNER OVERLAY -->
+    <div id="app-runner">
+        <div class="runner-header">
+            <div class="runner-title" id="app-title">Loading...</div>
+            <button class="back-btn" onclick="appManager.closeVersion()">
+                <span>← Back to Hub</span>
+            </button>
+        </div>
+        <div id="app-content"></div>
+    </div>
+
+    <!-- CHATBOT WIDGET -->
+    <div class="chatbot-container">
+        <div class="chat-window" id="chat-window">
+            <div class="chat-head">
+                <h4>🤖 AI Assistant</h4>
+                <button onclick="toggleChat()" style="background:none;border:none;color:white;cursor:pointer">✕</button>
+            </div>
+            <div class="chat-body" id="chat-body">
+                <div class="msg msg-bot">Hello! I'm the Attendance Bot. Ask me how to register faces or about the GPS features!</div>
+            </div>
+            <div class="chat-input-box">
+                <input type="text" class="chat-input" id="chat-input" placeholder="Type a message..." onkeypress="handleEnter(event)">
+                <button class="chat-send" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+        <button class="chat-toggle" onclick="toggleChat()">💬</button>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        /**
+         * ------------------------------------------------------------------
+         * CHATBOT LOGIC
+         * ------------------------------------------------------------------
+         */
+        const chatBody = document.getElementById('chat-body');
+        const chatInput = document.getElementById('chat-input');
+        const chatWindow = document.getElementById('chat-window');
+
+        function toggleChat() { chatWindow.classList.toggle('open'); }
+        function handleEnter(e) { if(e.key === 'Enter') sendMessage(); }
+
+        function sendMessage() {
+            const txt = chatInput.value.trim();
+            if(!txt) return;
+            addMsg(txt, 'user');
+            chatInput.value = '';
+            
+            // Simple keyword response logic
+            setTimeout(() => {
+                let reply = "I'm not sure about that. Try asking about 'register', 'GPS', or 'privacy'.";
+                const t = txt.toLowerCase();
+                if(t.includes('hi') || t.includes('hello')) reply = "Hi! Ready to take attendance?";
+                else if(t.includes('register') || t.includes('add')) reply = "To register: 1. Select 'Register Face'. 2. Enter details. 3. Click Capture while looking at the camera.";
+                else if(t.includes('gps') || t.includes('location')) reply = "The Pro version uses browser GPS and OpenStreetMap API to verify if a user is within range of the office.";
+                else if(t.includes('privacy') || t.includes('data')) reply = "Your face data is converted to mathematical descriptors and stored in your browser's LocalStorage. It never leaves your device.";
+                addMsg(reply, 'bot');
+            }, 500);
+        }
+
+        function addMsg(txt, type) {
+            const d = document.createElement('div');
+            d.className = `msg msg-${type}`;
+            d.textContent = txt;
+            chatBody.appendChild(d);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        /**
+         * ------------------------------------------------------------------
+         * APP MANAGER (Router & State)
+         * ------------------------------------------------------------------
+         */
+        const appManager = {
+            activeStyle: null,
+            activeScript: null,
+
+            loadVersion: function(versionId) {
+                // 1. Show Runner
+                document.getElementById('app-runner').classList.add('active');
+                
+                // 2. Set Title
+                const titles = { 'v1': 'Basic Attendance Suite', 'v2': 'Room Tracking System', 'v3': 'Geo-Spatial Attendance' };
+                document.getElementById('app-title').textContent = titles[versionId];
+
+                // 3. Clean previous
+                const container = document.getElementById('app-content');
+                container.innerHTML = '';
+                if(this.activeStyle) this.activeStyle.remove();
+                
+                // 4. Load Data
+                const data = getVersionCode(versionId);
+
+                // 5. Inject CSS
+                const style = document.createElement('style');
+                style.textContent = data.css;
+                document.head.appendChild(style);
+                this.activeStyle = style;
+
+                // 6. Inject HTML
+                container.innerHTML = data.html;
+
+                // 7. Run JS (Function Wrapper)
+                // We use a timeout to ensure DOM is ready inside the container
+                setTimeout(() => {
+                    try {
+                        const run = new Function(data.js);
+                        run();
+                    } catch(e) { console.error("Script Error:", e); }
+                }, 100);
+            },
+
+            closeVersion: function() {
+                // Stop Camera
+                const vid = document.getElementById('video');
+                if(vid && vid.srcObject) {
+                    vid.srcObject.getTracks().forEach(t => t.stop());
+                }
+
+                // UI Reset
+                document.getElementById('app-runner').classList.remove('active');
+                document.getElementById('app-content').innerHTML = '';
+                if(this.activeStyle) this.activeStyle.remove();
+                
+                // Reload page to clear all JS memory/listeners cleanly
+                // A true SPA would manage listeners, but reload is safer for camera permissions/memory here
+                setTimeout(() => window.location.reload(), 300);
+            }
+        };
+
+        /**
+         * ------------------------------------------------------------------
+         * VERSION DATA STORE
+         * Returns HTML/CSS/JS strings for each app version
+         * ------------------------------------------------------------------
+         */
+        function getVersionCode(key) {
+            
+            // Shared CSS for the App Interior
+            const sharedCSS = `
+                .app-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; padding: 1.5rem; height: 100%; max-width: 1600px; margin: 0 auto; }
+                @media(max-width: 1000px) { .app-grid { grid-template-columns: 1fr; overflow-y: auto; } }
+                
+                .cam-panel { background: var(--panel-bg); border-radius: 16px; border: 1px solid var(--border-color); padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+                .vid-wrap { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden; }
+                video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+                canvas { position: absolute; top: 0; left: 0; transform: scaleX(-1); }
+                
+                .controls { background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem; }
+                .mode-tabs { display: flex; background: var(--bg-dark); padding: 4px; border-radius: 8px; }
+                .tab { flex: 1; padding: 0.6rem; border: none; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: 6px; font-weight: 600; transition: 0.2s; }
+                .tab.active { background: var(--primary); color: white; }
+                
+                .inputs { display: flex; gap: 0.5rem; }
+                input { flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); color: white; padding: 0.8rem; border-radius: 8px; outline: none; }
+                .btn-cap { background: var(--primary); border: none; padding: 0 1.5rem; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; }
+                .btn-cap:disabled { opacity: 0.5; cursor: not-allowed; }
+
+                .data-panel { display: flex; flex-direction: column; gap: 1rem; height: 100%; overflow: hidden; }
+                .stat-box { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+                .stat { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 1.2rem; border-radius: 12px; text-align: center; }
+                .stat h3 { font-size: 2rem; color: var(--primary); margin-bottom: 0.2rem; }
+                .stat span { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
+
+                .list-card { flex: 1; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+                .lc-head { padding: 1rem; border-bottom: 1px solid var(--border-color); font-weight: 700; display: flex; justify-content: space-between; }
+                .lc-body { flex: 1; overflow-y: auto; padding: 0.5rem; }
+                
+                .log-item { background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 3px solid var(--accent-green); animation: slideIn 0.3s ease; }
+                @keyframes slideIn { from{opacity:0; transform:translateX(10px)} to{opacity:1; transform:translateX(0)} }
+                .li-top { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 0.2rem; }
+                .li-sub { font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; }
+                
+                .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: var(--panel-bg); border: 1px solid var(--accent-green); color: var(--accent-green); padding: 0.8rem 2rem; border-radius: 50px; opacity: 0; pointer-events: none; transition: 0.3s; font-weight: 600; z-index: 3000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+                .toast.show { opacity: 1; bottom: 3rem; }
+                
+                .gps-status { background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); padding: 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem; }
+                .gps-row { display: flex; justify-content: space-between; margin-bottom: 0.4rem; }
+            `;
+
+            // Shared JS Utilities
+            const sharedJS = `
+                // Utilities
+                function showToast(msg) {
+                    const t = document.getElementById('toast');
+                    t.textContent = msg; t.classList.add('show');
+                    setTimeout(() => t.classList.remove('show'), 3000);
+                }
+                async function loadFaceAPI() {
+                    // Using Github Pages for models (stable CDN)
+                    const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+                    await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+                    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+                }
+            `;
+
+            // =======================================================
+            // VERSION 1: BASIC
+            // =======================================================
+            if(key === 'v1') {
+                return {
+                    css: sharedCSS,
+                    html: `
+                        <div class="toast" id="toast">Action Successful</div>
+                        <div class="app-grid">
+                            <div class="cam-panel">
+                                <div class="vid-wrap">
+                                    <video id="video" autoplay muted></video>
+                                    <canvas id="canvas"></canvas>
+                                </div>
+                                <div class="controls">
+                                    <div class="mode-tabs">
+                                        <button class="tab active" onclick="setMode('enroll')" id="btn-enroll">Enroll</button>
+                                        <button class="tab" onclick="setMode('verify')" id="btn-verify">Attendance</button>
+                                    </div>
+                                    <div class="inputs" id="input-area">
+                                        <input type="text" id="name" placeholder="Enter Full Name">
+                                        <button class="btn-cap" onclick="register()">Capture</button>
+                                    </div>
+                                    <div style="font-size:0.8rem; color:#666">Status: <span id="status">Loading Models...</span></div>
+                                </div>
+                            </div>
+                            <div class="data-panel">
+                                <div class="stat-box">
+                                    <div class="stat"><h3 id="count-faces">0</h3><span>Registered</span></div>
+                                    <div class="stat"><h3 id="count-logs">0</h3><span>Present Today</span></div>
+                                </div>
+                                <div class="list-card">
+                                    <div class="lc-head">Attendance Log <button onclick="clearLogs()" style="background:none;border:none;color:#ef4444;cursor:pointer">Clear</button></div>
+                                    <div class="lc-body" id="log-list"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    js: `
+                        ${sharedJS}
+                        let labeledDescriptors = [];
+                        let mode = 'enroll';
+                        
+                        // Initialization
+                        (async function init() {
+                            await loadFaceAPI();
+                            document.getElementById('status').textContent = "Starting Camera...";
+                            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+                            const video = document.getElementById('video');
+                            video.srcObject = stream;
+                            
+                            // Load saved data
+                            const saved = localStorage.getItem('v1_faces');
+                            if(saved) {
+                                const parsed = JSON.parse(saved);
+                                labeledDescriptors = parsed.map(f => new faceapi.LabeledFaceDescriptors(f.label, f.descriptors.map(d => new Float32Array(d))));
+                            }
+                            updateStats();
+                            
+                            video.addEventListener('play', () => {
+                                const canvas = document.getElementById('canvas');
+                                const displaySize = { width: video.offsetWidth, height: video.offsetHeight };
+                                faceapi.matchDimensions(canvas, displaySize);
+                                document.getElementById('status').textContent = "System Ready";
+
+                                setInterval(async () => {
+                                    const detections = await faceapi.detectAllFaces(video).withFaceLandmarks().withFaceDescriptors();
+                                    const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                                    if(mode === 'enroll' && detections.length) {
+                                        faceapi.draw.drawDetections(canvas, resizedDetections);
+                                    } 
+                                    else if(mode === 'verify' && labeledDescriptors.length > 0) {
+                                        const matcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
+                                        resizedDetections.forEach(det => {
+                                            const match = matcher.findBestMatch(det.descriptor);
+                                            const box = det.detection.box;
+                                            const label = match.toString();
+                                            new faceapi.draw.DrawBox(box, { label: label }).draw(canvas);
+                                            if(match.label !== 'unknown') logAttendance(match.label);
+                                        });
+                                    }
+                                }, 100);
+                            });
+                        })();
+
+                        window.setMode = (m) => {
+                            mode = m;
+                            document.getElementById('btn-enroll').classList.toggle('active', m === 'enroll');
+                            document.getElementById('btn-verify').classList.toggle('active', m === 'verify');
+                            document.getElementById('input-area').style.display = m === 'enroll' ? 'flex' : 'none';
+                        };
+
+                        window.register = async () => {
+                            const name = document.getElementById('name').value;
+                            if(!name) return showToast('Enter a Name!');
+                            const detection = await faceapi.detectSingleFace(document.getElementById('video')).withFaceLandmarks().withFaceDescriptor();
+                            if(detection) {
+                                labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(name, [detection.descriptor]));
+                                saveFaces();
+                                showToast('Face Registered!');
+                                document.getElementById('name').value = '';
+                                updateStats();
+                            } else {
+                                showToast('No face detected!');
+                            }
+                        };
+
+                        function saveFaces() {
+                            const data = labeledDescriptors.map(ld => ({ label: ld.label, descriptors: ld.descriptors.map(d => Array.from(d)) }));
+                            localStorage.setItem('v1_faces', JSON.stringify(data));
+                        }
+
+                        let lastLog = {};
+                        function logAttendance(name) {
+                            const now = Date.now();
+                            if(lastLog[name] && (now - lastLog[name] < 10000)) return; // 10s cooldown
+                            lastLog[name] = now;
+                            
+                            const div = document.createElement('div');
+                            div.className = 'log-item';
+                            div.innerHTML = \`<div class="li-top"><span>\${name}</span></div><div class="li-sub"><span>\${new Date().toLocaleTimeString()}</span><span>Verified</span></div>\`;
+                            document.getElementById('log-list').prepend(div);
+                            showToast(\`Verified: \${name}\`);
+                            updateStats();
+                        }
+
+                        function updateStats() {
+                            document.getElementById('count-faces').textContent = labeledDescriptors.length;
+                            document.getElementById('count-logs').textContent = document.getElementById('log-list').children.length;
+                        }
+                        
+                        window.clearLogs = () => document.getElementById('log-list').innerHTML = '';
+                    `
+                };
+            }
+
+            // =======================================================
+            // VERSION 2: ROOM TRACKER
+            // =======================================================
+            if(key === 'v2') {
+                return {
+                    css: sharedCSS,
+                    html: `
+                        <div class="toast" id="toast"></div>
+                        <div class="app-grid">
+                            <div class="cam-panel">
+                                <div class="vid-wrap">
+                                    <video id="video" autoplay muted></video>
+                                    <canvas id="canvas"></canvas>
+                                </div>
+                                <div class="controls">
+                                    <div class="mode-tabs">
+                                        <button class="tab active" onclick="setMode('enroll')" id="btn-enroll">Register</button>
+                                        <button class="tab" onclick="setMode('verify')" id="btn-verify">Track</button>
+                                    </div>
+                                    <div class="inputs" id="input-area">
+                                        <input type="text" id="name" placeholder="Name" style="flex:2">
+                                        <input type="text" id="room" placeholder="Room #" style="flex:1">
+                                        <button class="btn-cap" onclick="register()">Save</button>
+                                    </div>
+                                    <div style="font-size:0.8rem; color:#666">Mode: Room Tracking</div>
+                                </div>
+                            </div>
+                            <div class="data-panel">
+                                <div class="list-card">
+                                    <div class="lc-head">Room Activity Log</div>
+                                    <div class="lc-body" id="log-list"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    js: `
+                        ${sharedJS}
+                        let labeledDescriptors = [];
+                        let mode = 'enroll';
+
+                        (async function init() {
+                            await loadFaceAPI();
+                            const video = document.getElementById('video');
+                            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+                            video.srcObject = stream;
+
+                            const saved = localStorage.getItem('v2_faces');
+                            if(saved) {
+                                const parsed = JSON.parse(saved);
+                                labeledDescriptors = parsed.map(f => new faceapi.LabeledFaceDescriptors(f.label, f.descriptors.map(d => new Float32Array(d))));
+                            }
+
+                            video.addEventListener('play', () => {
+                                const canvas = document.getElementById('canvas');
+                                const displaySize = { width: video.offsetWidth, height: video.offsetHeight };
+                                faceapi.matchDimensions(canvas, displaySize);
+                                
+                                setInterval(async () => {
+                                    const detections = await faceapi.detectAllFaces(video).withFaceLandmarks().withFaceDescriptors();
+                                    const resized = faceapi.resizeResults(detections, displaySize);
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+                                    if(mode === 'verify' && labeledDescriptors.length > 0) {
+                                        const matcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
+                                        resized.forEach(det => {
+                                            const match = matcher.findBestMatch(det.descriptor);
+                                            const label = match.toString();
+                                            // Parse Name and Room from Label "Name|Room"
+                                            const parts = match.label.split('|');
+                                            const display = parts.length > 1 ? \`\${parts[0]} (Room \${parts[1]})\` : match.label;
+                                            
+                                            new faceapi.draw.DrawBox(det.detection.box, { label: display }).draw(canvas);
+                                            if(match.label !== 'unknown') logActivity(parts[0], parts[1]);
+                                        });
+                                    }
+                                }, 100);
+                            });
+                        })();
+
+                        window.setMode = (m) => {
+                            mode = m;
+                            document.getElementById('btn-enroll').classList.toggle('active', m === 'enroll');
+                            document.getElementById('btn-verify').classList.toggle('active', m === 'verify');
+                            document.getElementById('input-area').style.display = m === 'enroll' ? 'flex' : 'none';
+                        };
+
+                        window.register = async () => {
+                            const name = document.getElementById('name').value;
+                            const room = document.getElementById('room').value || 'Unassigned';
+                            if(!name) return showToast('Name Required');
+                            
+                            const detection = await faceapi.detectSingleFace(document.getElementById('video')).withFaceLandmarks().withFaceDescriptor();
+                            if(detection) {
+                                // Store room in label with separator
+                                const fullLabel = \`\${name}|\${room}\`; 
+                                labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(fullLabel, [detection.descriptor]));
+                                
+                                const data = labeledDescriptors.map(ld => ({ label: ld.label, descriptors: ld.descriptors.map(d => Array.from(d)) }));
+                                localStorage.setItem('v2_faces', JSON.stringify(data));
+                                
+                                showToast(\`Saved \${name} to Room \${room}\`);
+                                document.getElementById('name').value = '';
+                            }
+                        };
+
+                        let lastLog = {};
+                        function logActivity(name, room) {
+                            const now = Date.now();
+                            if(lastLog[name] && (now - lastLog[name] < 10000)) return;
+                            lastLog[name] = now;
+                            
+                            const div = document.createElement('div');
+                            div.className = 'log-item';
+                            div.innerHTML = \`<div class="li-top"><span>\${name}</span><span style="color:var(--accent-yellow)">Room \${room}</span></div><div class="li-sub"><span>\${new Date().toLocaleTimeString()}</span><span>Present</span></div>\`;
+                            document.getElementById('log-list').prepend(div);
+                            showToast(\`\${name} detected in Room \${room}\`);
+                        }
+                    `
+                };
+            }
+
+            // =======================================================
+            // VERSION 3: PRO (GPS + API)
+            // =======================================================
+            if(key === 'v3') {
+                return {
+                    css: sharedCSS,
+                    html: `
+                        <div class="toast" id="toast"></div>
+                        <div class="app-grid">
+                            <div class="cam-panel">
+                                <div class="vid-wrap">
+                                    <video id="video" autoplay muted></video>
+                                    <canvas id="canvas"></canvas>
+                                </div>
+                                <div class="controls">
+                                    <div class="gps-status">
+                                        <div class="gps-row"><span>🛰️ GPS Status:</span> <span id="gps-active" style="color:red">Searching...</span></div>
+                                        <div class="gps-row"><span>📍 Current Address:</span> <span id="cur-addr" style="color:#aaa; font-size:0.75rem">Fetching API...</span></div>
+                                        <div class="gps-row" style="margin-top:0.5rem; padding-top:0.5rem; border-top:1px solid rgba(255,255,255,0.1)">
+                                            <span>🏢 Office Distance:</span> <span id="dist-val">--</span>
+                                        </div>
+                                        <button onclick="setOffice()" style="width:100%; margin-top:0.5rem; padding:0.4rem; background:rgba(255,255,255,0.1); border:1px solid #aaa; color:white; border-radius:4px; cursor:pointer">Set Current Location as Office</button>
+                                    </div>
+                                    <div class="inputs" id="input-area">
+                                        <input type="text" id="name" placeholder="Full Name">
+                                        <button class="btn-cap" onclick="register()">Capture</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="data-panel">
+                                <div class="list-card">
+                                    <div class="lc-head">Geo-Verified Attendance</div>
+                                    <div class="lc-body" id="log-list"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    js: `
+                        ${sharedJS}
+                        let labeledDescriptors = [];
+                        let userLat = 0, userLon = 0;
+                        let officeLat = localStorage.getItem('offLat');
+                        let officeLon = localStorage.getItem('offLon');
+                        
+                        // API Throttling
+                        let lastApiCall = 0;
+
+                        (async function init() {
+                            await loadFaceAPI();
+                            
+                            // Setup Camera
+                            const video = document.getElementById('video');
+                            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+                            video.srcObject = stream;
+
+                            // Setup GPS
+                            if(navigator.geolocation) {
+                                navigator.geolocation.watchPosition(successGPS, errGPS);
+                            } else {
+                                document.getElementById('gps-active').textContent = "Not Supported";
+                            }
+
+                            // Load Faces
+                            const saved = localStorage.getItem('v3_faces');
+                            if(saved) {
+                                const parsed = JSON.parse(saved);
+                                labeledDescriptors = parsed.map(f => new faceapi.LabeledFaceDescriptors(f.label, f.descriptors.map(d => new Float32Array(d))));
+                            }
+
+                            video.addEventListener('play', () => {
+                                const canvas = document.getElementById('canvas');
+                                const displaySize = { width: video.offsetWidth, height: video.offsetHeight };
+                                faceapi.matchDimensions(canvas, displaySize);
+                                
+                                setInterval(async () => {
+                                    const detections = await faceapi.detectAllFaces(video).withFaceLandmarks().withFaceDescriptors();
+                                    const resized = faceapi.resizeResults(detections, displaySize);
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+                                    // Verify Mode Only for simplicity in V3
+                                    if(labeledDescriptors.length > 0) {
+                                        const matcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
+                                        resized.forEach(det => {
+                                            const match = matcher.findBestMatch(det.descriptor);
+                                            new faceapi.draw.DrawBox(det.detection.box, { label: match.toString() }).draw(canvas);
+                                            if(match.label !== 'unknown') logGeoAttendance(match.label);
+                                        });
+                                    }
+                                }, 100);
+                            });
+                        })();
+
+                        // GPS Functions
+                        function successGPS(pos) {
+                            userLat = pos.coords.latitude;
+                            userLon = pos.coords.longitude;
+                            document.getElementById('gps-active').textContent = "Active";
+                            document.getElementById('gps-active').style.color = "#10b981";
+                            
+                            // Calc distance
+                            if(officeLat && officeLon) {
+                                const dist = getDistanceFromLatLonInM(userLat, userLon, officeLat, officeLon);
+                                const isNear = dist < 100; // 100 meters
+                                const dEl = document.getElementById('dist-val');
+                                dEl.textContent = Math.round(dist) + 'm';
+                                dEl.style.color = isNear ? '#10b981' : '#ef4444';
+                            }
+
+                            // Fetch Address (Nominatim API) - Debounced
+                            const now = Date.now();
+                            if(now - lastApiCall > 5000) { // Call every 5s max
+                                lastApiCall = now;
+                                fetch(\`https://nominatim.openstreetmap.org/reverse?format=json&lat=\${userLat}&lon=\${userLon}\`)
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if(data.display_name) {
+                                            document.getElementById('cur-addr').textContent = data.display_name.substring(0, 40) + '...';
+                                        }
+                                    });
+                            }
+                        }
+
+                        function errGPS() { document.getElementById('gps-active').textContent = "Signal Lost"; }
+
+                        window.setOffice = () => {
+                            if(userLat === 0) return showToast("Wait for GPS signal");
+                            officeLat = userLat; officeLon = userLon;
+                            localStorage.setItem('offLat', officeLat);
+                            localStorage.setItem('offLon', officeLon);
+                            showToast("Office Location Saved!");
+                        }
+
+                        function getDistanceFromLatLonInM(lat1,lon1,lat2,lon2) {
+                            var R = 6371; // Radius of the earth in km
+                            var dLat = deg2rad(lat2-lat1);  
+                            var dLon = deg2rad(lon2-lon1); 
+                            var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2); 
+                            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+                            var d = R * c; // Distance in km
+                            return d * 1000;
+                        }
+                        function deg2rad(deg) { return deg * (Math.PI/180) }
+
+                        window.register = async () => {
+                            const name = document.getElementById('name').value;
+                            if(!name) return showToast('Name Required');
+                            const detection = await faceapi.detectSingleFace(document.getElementById('video')).withFaceLandmarks().withFaceDescriptor();
+                            if(detection) {
+                                labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(name, [detection.descriptor]));
+                                const data = labeledDescriptors.map(ld => ({ label: ld.label, descriptors: ld.descriptors.map(d => Array.from(d)) }));
+                                localStorage.setItem('v3_faces', JSON.stringify(data));
+                                showToast('Registered: ' + name);
+                            }
+                        };
+
+                        let lastLog = {};
+                        function logGeoAttendance(name) {
+                            const now = Date.now();
+                            if(lastLog[name] && (now - lastLog[name] < 15000)) return;
+                            lastLog[name] = now;
+                            
+                            // Check Geofence
+                            let status = "Remote";
+                            let color = "#ef4444"; // red
+                            if(officeLat) {
+                                const dist = getDistanceFromLatLonInM(userLat, userLon, officeLat, officeLon);
+                                if(dist < 100) { status = "On-Site"; color = "#10b981"; }
+                            }
+
+                            const div = document.createElement('div');
+                            div.className = 'log-item';
+                            div.style.borderLeftColor = color;
+                            div.innerHTML = \`<div class="li-top"><span>\${name}</span><span style="color:\${color}">\${status}</span></div><div class="li-sub"><span>\${new Date().toLocaleTimeString()}</span><span>\${document.getElementById('cur-addr').textContent.substring(0,15)}...</span></div>\`;
+                            document.getElementById('log-list').prepend(div);
+                            showToast(\`\${name} Marked (\${status})\`);
+                        }
+                    `
+                };
+            }
+        }
+    </script>
+</body>
+</html>
+```
